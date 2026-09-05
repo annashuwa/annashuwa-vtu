@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "ANNASHUWA VTU",
+    "slug": "annashuwa-vtu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.annashuwa.vtu"
+    },
+    "android": {
+      "package": "com.annashuwa.vtu",
+      "adaptiveIcon": {
+        "backgroundColor": "#28AA63",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#133425"
+        }
+      ],
+      "expo-font"
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

@@ -1,0 +1,260 @@
+// ==============================================================================
+// ANNASHUWA VTU - Prisma Schema
+// Uses SQLite for zero-config localhost development.
+// The schema deliberately avoids provider-specific features (enums, JSON) so it
+// works with PostgreSQL too. To switch to PostgreSQL:
+//   1. change `provider` below to "postgresql"
+//   2. set DATABASE_URL to your postgres connection string
+//   3. run `npm run prisma:migrate`
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Identity & Access ----------
+
+model User {
+  id            String   @id @default(cuid())
+  fullName      String
+  email         String   @unique
+  phone         String   @unique
+  password      String // hashed
+  role          String   @default("USER") // USER | ADMIN
+  status        String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  avatar        String?
+  emailVerified Boolean  @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet            Wallet?
+  walletTransaction WalletTransaction[]
+  transactions      Transaction[]
+  payments          Payment[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  admin             Admin?
+}
+
+// Administrative profile for users with role ADMIN
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now())
+}
+
+// ---------- Wallet ----------
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Decimal  @default(0)
+  currency  String   @default("NGN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // DEPOSIT | WITHDRAWAL | AIRTIME_PURCHASE | DATA_PURCHASE | ELECTRICITY_PAYMENT
+  // | CABLE_SUBSCRIPTION | EXAM_PIN_PURCHASE | REFUND | ADJUSTMENT
+  type        String
+  amount      Decimal  @default(0)
+  balanceAfter Decimal @default(0)
+  status      String   @default("SUCCESSFUL") // PENDING | SUCCESSFUL | FAILED
+  reference   String
+  description String?
+  metadata    String?
+  transactionId String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([reference])
+  @@index([createdAt])
+}
+
+// ---------- Core Transactions ----------
+
+model Transaction {
+  id            String   @id @default(cuid())
+  reference     String   @unique // public reference, e.g. ANS-XXXXXXXXXX
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // AIRTIME | DATA | ELECTRICITY | CABLE | EXAM_PIN | WALLET_FUNDING | WITHDRAWAL
+  serviceType   String
+  provider      String // MTN / IKEDC / DSTV / PAYSTACK / TEST ...
+  customerInfo  String? // phone | meter number | smartcard | email
+  amount        Decimal  @default(0)
+  fee           Decimal  @default(0)
+  // PENDING | PROCESSING | SUCCESSFUL | FAILED
+  status        String   @default("PENDING")
+  description   String?
+  metadata      String? // JSON serialized
+  paymentMethod String? // WALLET | PAYSTACK | FLUTTERWAVE | MONNIFY | TEST
+  channel       String? // WEB | API
+  apiResponse   String? // raw provider response (JSON)
+  adminNote     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([reference])
+  @@index([serviceType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ---------- Catalogue / Services ----------
+
+model DataPlan {
+  id          String  @id @default(cuid())
+  network     String // MTN | Airtel | Glo | 9mobile
+  planName    String
+  size        String // 1GB, 500MB ...
+  validity    String // Daily, Weekly, Monthly ...
+  price       Decimal
+  oldPrice    Decimal?
+  kind        String  @default("DATA") // DATA | SME | GIFTING | CORP
+  description String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([network])
+  @@index([isActive])
+}
+
+model ServiceProvider {
+  id          String   @id @default(cuid())
+  // ELECTRICITY | CABLE
+  category    String
+  name        String // IKEDC, DSTV ...
+  code        String   @unique // ikeja-electric, dstv ...
+  imageUrl    String?
+  description String?
+  fee         Decimal  @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packages ServicePackage[]
+}
+
+model ServicePackage {
+  id          String   @id @default(cuid())
+  providerId  String
+  provider    ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name        String // DSTV Premium, GOtv Max, Startimes Nova+ ...
+  price       Decimal 
+  oldPrice    Decimal?
+  duration    String? // monthly, yearly ...
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([providerId])
+  @@index([isActive])
+}
+
+model ExamPinProduct {
+  id          String   @id @default(cuid())
+  name        String // WAEC, NECO, NABTEB, JAMB ...
+  category    String
+  price       Decimal 
+  costPrice   Decimal?
+  description String?
+  isActive    Boolean  @default(true)
+  soldCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// ---------- Payments ----------
+
+model Payment {
+  id            String   @id @default(cuid())
+  reference     String   @unique // gateway reference
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionId String?
+  amount        Decimal 
+  // TEST | PAYSTACK | FLUTTERWAVE | MONNIFY
+  gateway       String   @default("TEST")
+  // PENDING | SUCCESSFUL | FAILED
+  status        String   @default("PENDING")
+  fee           Decimal  @default(0)
+  metadata      String?
+  initData      String? // JSON: init request & response payload
+  verifyData    String? // JSON: last verification payload
+  channel       String? // WEB
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([reference])
+  @@index([status])
+}
+
+// ---------- Notifications ----------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO | SUCCESS | WARNING | ERROR
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ---------- Auditing ----------
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entityType String?
+  entityId  String?
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([expiresAt])
+}

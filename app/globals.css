@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  /* Brand colors — irecharge green family */
+  --royal-50: #eafaf2;
+  --royal-100: #d0f2e0;
+  --royal-200: #a5e5c5;
+  --royal-300: #6fd3a3;
+  --royal-400: #3cbb7e;
+  --royal-500: #28aa63;
+  --royal-600: #1e8f54;
+  --royal-700: #1a7045;
+  --royal-800: #16593a;
+  --royal-900: #12492f;
+  --royal-950: #08271a;
+
+  --gold-50: #fffbea;
+  --gold-100: #fff3c4;
+  --gold-200: #fce588;
+  --gold-300: #fadb5f;
+  --gold-400: #f7c948;
+  --gold-500: #f5b546;
+  --gold-600: #e29a20;
+  --gold-700: #c97a17;
+  --gold-800: #a95e14;
+  --gold-900: #8d4a12;
+  --gold-950: #451a03;
+
+  /* Dark-green surfaces (irecharge dark green #133425) */
+  --navy-50: #f0f7f3;
+  --navy-100: #dcece1;
+  --navy-200: #bbd9c7;
+  --navy-300: #8fbea5;
+  --navy-400: #5e9e7f;
+  --navy-500: #3c8363;
+  --navy-600: #2a684e;
+  --navy-700: #205340;
+  --navy-800: #1b4333;
+  --navy-900: #133425;
+  --navy-950: #0a2118;
+
+  /* Semantic tokens - light */
+  --background: #f6f6f9;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: var(--royal-500);
+  --primary-foreground: #ffffff;
+  --secondary: #eafbf2;
+  --secondary-foreground: var(--royal-800);
+  --muted: #f4f6f9;
+  --muted-foreground: #5b6473;
+  --accent: #eafbf2;
+  --accent-foreground: var(--royal-700);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #0e9f6e;
+  --warning: #d97706;
+  --border: #e3e8e4;
+  --input: #d5dcd7;
+  --ring: var(--royal-500);
+  --sidebar: var(--navy-900);
+  --sidebar-foreground: #ffffff;
+  --sidebar-muted: #94b8a3;
+}
+
+.dark {
+  --background: #0a2118;
+  --foreground: #e7f2ea;
+  --card: #0f2a1d;
+  --card-foreground: #e7f2ea;
+  --popover: #0f2a1d;
+  --popover-foreground: #e7f2ea;
+  --primary: #34d399;
+  --primary-foreground: #062015;
+  --secondary: #14392a;
+  --secondary-foreground: #a5e5c5;
+  --muted: #122a1f;
+  --muted-foreground: #9cb6a4;
+  --accent: #14392a;
+  --accent-foreground: #6fd3a3;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --border: #1e4333;
+  --input: #24513c;
+  --ring: #34d399;
+  --sidebar: #062015;
+  --sidebar-foreground: #e7f2ea;
+  --sidebar-muted: #7ea895;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+
+  --color-royal-50: var(--royal-50);
+  --color-royal-100: var(--royal-100);
+  --color-royal-200: var(--royal-200);
+  --color-royal-300: var(--royal-300);
+  --color-royal-400: var(--royal-400);
+  --color-royal-500: var(--royal-500);
+  --color-royal-600: var(--royal-600);
+  --color-royal-700: var(--royal-700);
+  --color-royal-800: var(--royal-800);
+  --color-royal-900: var(--royal-900);
+  --color-royal-950: var(--royal-950);
+
+  --color-gold-50: var(--gold-50);
+  --color-gold-100: var(--gold-100);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gold-700: var(--gold-700);
+  --color-gold-800: var(--gold-800);
+  --color-gold-900: var(--gold-900);
+  --color-gold-950: var(--gold-950);
+
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+
+  /* Brand greens used for success accents & CTAs */
+  --color-emerald-100: #d0f2e0;
+  --color-emerald-200: #a5e5c5;
+  --color-emerald-300: #6fd3a3;
+  --color-emerald-400: #36f07d;
+  --color-emerald-500: #26a560;
+  --color-emerald-600: #1e8f54;
+  --color-emerald-700: #1a7045;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-gradient-royal {
+    @apply bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 bg-clip-text text-transparent;
+  }
+  .bg-brand-gradient {
+    background-image: linear-gradient(25.93deg, #26a560 71.14%, #36f07d 128.71%);
+  }
+  .bg-brand-gradient-soft {
+    background-image: linear-gradient(25.93deg, #27aa63 0%, #dcf6e8 200%);
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}

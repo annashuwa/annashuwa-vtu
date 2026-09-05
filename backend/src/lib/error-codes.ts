@@ -1,0 +1,90 @@
+export type ErrorCode =
+  | "VALIDATION_ERROR"
+  | "NOT_FOUND"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "RATE_LIMITED"
+  | "CONFLICT"
+  | "INSUFFICIENT_FUNDS"
+  | "WALLET_OPERATION_FAILED"
+  | "TRANSACTION_NOT_FOUND"
+  | "TRANSACTION_ALREADY_FINALIZED"
+  | "TRANSACTION_PENDING"
+  | "PROVIDER_ERROR"
+  | "PROVIDER_NOT_FOUND"
+  | "PROVIDER_UNAVAILABLE"
+  | "PROVIDER_TIMEOUT"
+  | "PROVIDER_REJECTED"
+  | "PLAN_NOT_FOUND"
+  | "PLAN_MISMATCH"
+  | "PACKAGE_NOT_FOUND"
+  | "PRODUCT_NOT_FOUND"
+  | "VALIDATION_FAILED"
+  | "PAYMENT_FAILED"
+  | "INVALID_REFERENCE"
+  | "INVALID_REFRESH_TOKEN"
+  | "EMAIL_TAKEN"
+  | "PHONE_TAKEN"
+  | "USERNAME_TAKEN"
+  | "INVALID_CREDENTIALS"
+  | "ACCOUNT_SUSPENDED"
+  | "EMAIL_NOT_VERIFIED"
+  | "INVALID_RESET_TOKEN"
+  | "EXTERNAL_SERVICE_ERROR"
+  | "INTERNAL_ERROR";
+
+export const ERROR_CODES: Record<ErrorCode, number> = {
+  VALIDATION_ERROR: 400,
+  NOT_FOUND: 404,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  RATE_LIMITED: 429,
+  CONFLICT: 409,
+  INSUFFICIENT_FUNDS: 400,
+  WALLET_OPERATION_FAILED: 400,
+  TRANSACTION_NOT_FOUND: 404,
+  TRANSACTION_ALREADY_FINALIZED: 409,
+  TRANSACTION_PENDING: 409,
+  PROVIDER_ERROR: 502,
+  PROVIDER_NOT_FOUND: 404,
+  PROVIDER_UNAVAILABLE: 503,
+  PROVIDER_TIMEOUT: 504,
+  PROVIDER_REJECTED: 400,
+  PLAN_NOT_FOUND: 404,
+  PLAN_MISMATCH: 400,
+  PACKAGE_NOT_FOUND: 404,
+  PRODUCT_NOT_FOUND: 404,
+  VALIDATION_FAILED: 400,
+  PAYMENT_FAILED: 400,
+  INVALID_REFERENCE: 400,
+  INVALID_REFRESH_TOKEN: 401,
+  EMAIL_TAKEN: 409,
+  PHONE_TAKEN: 409,
+  USERNAME_TAKEN: 409,
+  INVALID_CREDENTIALS: 401,
+  ACCOUNT_SUSPENDED: 403,
+  EMAIL_NOT_VERIFIED: 403,
+  INVALID_RESET_TOKEN: 400,
+  EXTERNAL_SERVICE_ERROR: 502,
+  INTERNAL_ERROR: 500,
+};
+
+export interface ProviderFailureContext {
+  provider: string;
+  operation: string;
+  status?: number | string;
+}
+
+export function normalizeProviderError(
+  provider: string,
+  operation: string,
+  status?: number | string
+): ErrorCode {
+  const s = String(status ?? "");
+  if (/timeout|timed.?out/i.test(s)) return "PROVIDER_TIMEOUT";
+  if (/unauthor|invalid.?key|forbidden|token/i.test(s)) return "PROVIDER_ERROR";
+  if (/insufficient.*balance|low.*balance/i.test(s)) return "PROVIDER_REJECTED";
+  if (/^4\d\d$/.test(s)) return "PROVIDER_REJECTED";
+  if (/^5\d\d$/.test(s)) return "PROVIDER_ERROR";
+  return "PROVIDER_ERROR";
+}

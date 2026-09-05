@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ANNASHUWA VTU</string>
+    <string name="title_activity_main">ANNASHUWA VTU</string>
+    <string name="package_name">com.annashuwa.vtu</string>
+    <string name="custom_url_scheme">com.annashuwa.vtu</string>
+</resources>
