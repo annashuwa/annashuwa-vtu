@@ -2,6 +2,7 @@ import { User, Wallet } from "../models";
 import { ApiError } from "../lib/errors";
 import { escRegex } from "../lib/utils";
 import { hashPassword, verifyPassword } from "./password.service";
+import { getWallet } from "./wallet.service";
 import type { IUser } from "../models/user";
 import type { IWallet } from "../models/wallet";
 
@@ -68,7 +69,9 @@ export async function loginUser(identifier: string, password: string) {
     throw new ApiError(403, "This account has been suspended. Contact support.", "ACCOUNT_SUSPENDED");
   }
   await User.findByIdAndUpdate(user._id, { $set: { lastLoginAt: new Date() } });
-  const wallet = await Wallet.findOne({ userId: user._id });
+  // Single source of truth: same auto-create + legacy-reconcile as /api/wallet,
+  // so /me and /wallet can never disagree about the balance.
+  const wallet = await getWallet(String(user._id));
   return { user, wallet };
 }
 
@@ -76,6 +79,7 @@ export async function loadSession(userId?: string | null) {
   if (!userId) return null;
   const user = (await User.findById(userId)) as IUser | null;
   if (!user || user.status !== "ACTIVE") return null;
-  const wallet = (await Wallet.findOne({ userId: user._id })) as IWallet | null;
+  // Same canonical read as /api/wallet (see loginUser above).
+  const wallet = (await getWallet(String(user._id))) as IWallet | null;
   return { user, wallet };
 }

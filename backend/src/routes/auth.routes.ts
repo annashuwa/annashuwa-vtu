@@ -94,7 +94,7 @@ router.get(
       user: serializeUser(
         { id: String(session.user._id), fullName: session.user.fullName, email: session.user.email, phone: session.user.phone, role: session.user.role, status: session.user.status, avatar: session.user.avatar, emailVerified: session.user.emailVerified, createdAt: session.user.createdAt },
         session.wallet
-          ? { id: String(session.wallet._id), balance: session.wallet.balance, currency: session.wallet.currency, updatedAt: session.wallet.updatedAt }
+          ? { id: String(session.wallet._id), balance: session.wallet.balance, availableBalance: session.wallet.availableBalance ?? null, pendingBalance: session.wallet.pendingBalance ?? null, currency: session.wallet.currency, updatedAt: session.wallet.updatedAt }
           : null
       ),
     });

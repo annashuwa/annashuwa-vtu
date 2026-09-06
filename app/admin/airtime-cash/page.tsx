@@ -50,9 +50,20 @@ export default function AdminAirtimeCashPage() {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), pageSize: "20" });
     if (status !== "ALL") params.set("status", status);
-    const res = await apiFetch<Paginated<AirtimeCashRequest>>(`/api/admin/airtime-cash?${params.toString()}`);
+    const res = await apiFetch<Paginated<AirtimeCashRequest> & { requests?: AirtimeCashRequest[] }>(`/api/admin/airtime-cash?${params.toString()}`);
     if (res.error) toast.error(res.error);
-    else setData(res.data!);
+    else {
+      // The API returns the list under `requests`; accept `items` too so the
+      // table can never silently render empty on a key mismatch.
+      const d = res.data!;
+      setData({
+        items: d.requests ?? d.items ?? [],
+        total: d.total ?? 0,
+        page: d.page ?? page,
+        pageSize: d.pageSize ?? 20,
+        totalPages: d.totalPages ?? 1,
+      });
+    }
     setLoading(false);
   }, [page, status]);
 

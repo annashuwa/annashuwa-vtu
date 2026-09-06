@@ -139,7 +139,7 @@ router.get(
       user: serializeUser(
         { id: String(req.authUser!._id), fullName: req.authUser!.fullName, email: req.authUser!.email, phone: req.authUser!.phone, role: req.authUser!.role, status: req.authUser!.status, avatar: req.authUser!.avatar, emailVerified: req.authUser!.emailVerified, createdAt: req.authUser!.createdAt },
         req.authWallet
-          ? { id: String(req.authWallet._id), balance: req.authWallet.balance, currency: req.authWallet.currency, updatedAt: req.authWallet.updatedAt }
+          ? { id: String(req.authWallet._id), balance: req.authWallet.balance, availableBalance: req.authWallet.availableBalance ?? null, pendingBalance: req.authWallet.pendingBalance ?? null, currency: req.authWallet.currency, updatedAt: req.authWallet.updatedAt }
           : null
       ),
     });

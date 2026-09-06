@@ -70,9 +70,20 @@ export default function AdminUsersPage() {
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (role !== "ALL") params.set("role", role);
     if (status !== "ALL") params.set("status", status);
-    const res = await apiFetch<Paginated<AdminUser>>(`/api/admin/users?${params.toString()}`);
+    const res = await apiFetch<Paginated<AdminUser> & { users?: AdminUser[] }>(`/api/admin/users?${params.toString()}`);
     if (res.error) toast.error(res.error);
-    else setData(res.data!);
+    else {
+      // The API returns the list under `users` (contract A29); accept `items`
+      // too so the table can never silently render empty on a key mismatch.
+      const d = res.data!;
+      setData({
+        items: d.users ?? d.items ?? [],
+        total: d.total ?? 0,
+        page: d.page ?? page,
+        pageSize: d.pageSize ?? 20,
+        totalPages: d.totalPages ?? 1,
+      });
+    }
     setLoading(false);
   }, [page, debouncedSearch, role, status]);
 
