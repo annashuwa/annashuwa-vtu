@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Wallet as WalletIcon, ArrowDownToLine, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ const gateways: GatewayOption[] = [
 const quickTopUps = [1000, 5000, 10000, 20000];
 
 export default function WalletPage() {
+  const router = useRouter();
   const [balance, setBalance] = useState<number | null>(null);
   const [available, setAvailable] = useState<number | null>(null);
   const [pending, setPending] = useState<number | null>(null);
@@ -106,6 +108,9 @@ export default function WalletPage() {
     setFundOpen(false);
     setAmount("");
     await loadWallet();
+    // Refresh server components (layout shell / topbar) so every balance on
+    // screen updates instantly instead of waiting for a manual refresh.
+    router.refresh();
   }
 
   const deposits = txns.filter((t) => t.type === "DEPOSIT" || t.type === "ADJUSTMENT");

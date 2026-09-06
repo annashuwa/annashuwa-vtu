@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tv, Search, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmPurchaseDialog, TransactionResult } from "@/components/shared/transaction-result";
+import { ConfirmPurchaseDialog, TransactionResultDialog, TransactionErrorDialog } from "@/components/shared/transaction-result";
 import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 import type { ServiceProvider, ServicePackage, VtuTransaction } from "@/types";
 
 export default function CablePage() {
+  const router = useRouter();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
   const [provider, setProvider] = useState<ServiceProvider | null>(null);
@@ -26,6 +28,7 @@ export default function CablePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ transaction: VtuTransaction; providerResponse?: { message?: string } } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const numericCard = smartCard.replace(/\D/g, "");
 
@@ -70,12 +73,15 @@ export default function CablePage() {
     });
     setLoading(false);
     if (res.error) {
-      toast.error(res.error);
+      setErrorMsg(res.error);
       setConfirmOpen(false);
       return;
     }
     setConfirmOpen(false);
     setResult({ transaction: res.data!.transaction, providerResponse: res.data!.providerResponse });
+    // Refresh server components (layout shell / topbar) so every balance on
+    // screen debits instantly instead of waiting for a manual refresh.
+    router.refresh();
   }
 
   return (
@@ -190,21 +196,23 @@ export default function CablePage() {
       </Card>
 
       {result && (
-        <Card className="gap-0">
-          <CardContent className="py-6">
-            <TransactionResult
-              transaction={result.transaction}
-              providerResponse={result.providerResponse}
-              onDone={() => {
-                setResult(null);
-                setValidated(null);
-                setSelectedPackage(null);
-                setSmartCard("");
-              }}
-            />
-          </CardContent>
-        </Card>
+        <TransactionResultDialog
+          open={!!result}
+          onOpenChange={(o) => {
+            if (!o) setResult(null);
+          }}
+          transaction={result.transaction}
+          providerResponse={result.providerResponse}
+          onDone={() => {
+            setResult(null);
+            setValidated(null);
+            setSelectedPackage(null);
+            setSmartCard("");
+          }}
+        />
       )}
+
+      <TransactionErrorDialog open={!!errorMsg} onOpenChange={(o) => !o && setErrorMsg(null)} message={errorMsg ?? ""} />
 
       {confirmOpen && provider && (
         <ConfirmPurchaseDialog

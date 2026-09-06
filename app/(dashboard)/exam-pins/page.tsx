@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmPurchaseDialog, TransactionResult } from "@/components/shared/transaction-result";
+import { ConfirmPurchaseDialog, TransactionResultDialog, TransactionErrorDialog } from "@/components/shared/transaction-result";
 import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 import type { ExamPinProduct, VtuTransaction } from "@/types";
 
 export default function ExamPinsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<ExamPinProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ExamPinProduct | null>(null);
@@ -24,6 +26,7 @@ export default function ExamPinsPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ transaction: VtuTransaction; pins?: string[]; serials?: string[] } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const qty = Math.max(1, Math.min(5, Number(quantity) || 1));
 
@@ -51,12 +54,15 @@ export default function ExamPinsPage() {
     );
     setSubmitting(false);
     if (res.error) {
-      toast.error(res.error);
+      setErrorMsg(res.error);
       setConfirmOpen(false);
       return;
     }
     setConfirmOpen(false);
     setResult({ transaction: res.data!.transaction, pins: res.data?.pins, serials: res.data?.serials });
+    // Refresh server components (layout shell / topbar) so every balance on
+    // screen debits instantly instead of waiting for a manual refresh.
+    router.refresh();
   }
 
   return (
@@ -133,20 +139,22 @@ export default function ExamPinsPage() {
       </Card>
 
       {result && (
-        <Card className="gap-0">
-          <CardContent className="py-6">
-            <TransactionResult
-              transaction={result.transaction}
-              pins={result.pins}
-              serials={result.serials}
-              onDone={() => {
-                setResult(null);
-                setSelected(null);
-              }}
-            />
-          </CardContent>
-        </Card>
+        <TransactionResultDialog
+          open={!!result}
+          onOpenChange={(o) => {
+            if (!o) setResult(null);
+          }}
+          transaction={result.transaction}
+          pins={result.pins}
+          serials={result.serials}
+          onDone={() => {
+            setResult(null);
+            setSelected(null);
+          }}
+        />
       )}
+
+      <TransactionErrorDialog open={!!errorMsg} onOpenChange={(o) => !o && setErrorMsg(null)} message={errorMsg ?? ""} />
 
       {confirmOpen && selected && (
         <ConfirmPurchaseDialog

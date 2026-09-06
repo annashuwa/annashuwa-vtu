@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Smartphone, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmPurchaseDialog, TransactionResult } from "@/components/shared/transaction-result";
+import { ConfirmPurchaseDialog, TransactionResultDialog, TransactionErrorDialog } from "@/components/shared/transaction-result";
 import { NETWORKS, detectNetwork } from "@/lib/constants";
 import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
@@ -18,12 +19,14 @@ import type { VtuTransaction } from "@/types";
 const quickAmounts = [100, 200, 500, 1000, 2000, 5000];
 
 export default function AirtimePage() {
+  const router = useRouter();
   const [network, setNetwork] = useState<string>("");
   const [phone, setPhone] = useState("");
   const [amount, setAmount] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ transaction: VtuTransaction; providerResponse?: { message?: string } } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const detected = phone ? detectNetwork(phone) : null;
   const numericPhone = phone.replace(/[^\d]/g, "");
@@ -47,12 +50,15 @@ export default function AirtimePage() {
     });
     setLoading(false);
     if (res.error) {
-      toast.error(res.error);
       setConfirmOpen(false);
+      setErrorMsg(res.error);
       return;
     }
     setConfirmOpen(false);
     setResult({ transaction: res.data!.transaction, providerResponse: res.data!.providerResponse });
+    // Refresh server components (layout shell / topbar) so every balance on
+    // screen debits instantly instead of waiting for a manual refresh.
+    router.refresh();
   }
 
   return (
@@ -150,37 +156,39 @@ export default function AirtimePage() {
         </CardContent>
       </Card>
 
-      {(result || confirmOpen) && (
-        <Card className="gap-0">
-          <CardContent className="py-6">
-            {confirmOpen ? (
-              <ConfirmPurchaseDialog
-                open={confirmOpen}
-                onOpenChange={setConfirmOpen}
-                title="Confirm airtime purchase"
-                description="Review your purchase before paying."
-                rows={[
-                  { label: "Network", value: network },
-                  { label: "Phone number", value: numericPhone },
-                ]}
-                amount={numericAmount}
-                onConfirm={confirmPurchase}
-                loading={loading}
-              />
-            ) : result ? (
-              <TransactionResult
-                transaction={result.transaction}
-                providerResponse={result.providerResponse}
-                onDone={() => {
-                  setResult(null);
-                  setPhone("");
-                  setAmount("");
-                }}
-              />
-            ) : null}
-          </CardContent>
-        </Card>
+      {confirmOpen && (
+        <ConfirmPurchaseDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Confirm airtime purchase"
+          description="Review your purchase before paying."
+          rows={[
+            { label: "Network", value: network },
+            { label: "Phone number", value: numericPhone },
+          ]}
+          amount={numericAmount}
+          onConfirm={confirmPurchase}
+          loading={loading}
+        />
       )}
+
+      {result && (
+        <TransactionResultDialog
+          open={!!result}
+          onOpenChange={(o) => {
+            if (!o) setResult(null);
+          }}
+          transaction={result.transaction}
+          providerResponse={result.providerResponse}
+          onDone={() => {
+            setResult(null);
+            setPhone("");
+            setAmount("");
+          }}
+        />
+      )}
+
+      <TransactionErrorDialog open={!!errorMsg} onOpenChange={(o) => !o && setErrorMsg(null)} message={errorMsg ?? ""} />
     </div>
   );
 }

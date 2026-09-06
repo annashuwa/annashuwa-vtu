@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Wifi } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmPurchaseDialog, TransactionResult } from "@/components/shared/transaction-result";
+import { ConfirmPurchaseDialog, TransactionResultDialog, TransactionErrorDialog } from "@/components/shared/transaction-result";
 import { NETWORKS, detectNetwork, type NetworkCode } from "@/lib/constants";
 import { apiFetch } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 import type { DataPlan as DataPlanType, VtuTransaction } from "@/types";
 
 export default function DataPage() {
+  const router = useRouter();
   const [network, setNetwork] = useState<NetworkCode | string>("MTN");
   const [plans, setPlans] = useState<DataPlanType[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -25,6 +27,7 @@ export default function DataPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ transaction: VtuTransaction; providerResponse?: { message?: string } } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const numericPhone = phone.replace(/[^\d]/g, "");
 
@@ -66,12 +69,15 @@ export default function DataPage() {
     });
     setLoading(false);
     if (res.error) {
-      toast.error(res.error);
+      setErrorMsg(res.error);
       setConfirmOpen(false);
       return;
     }
     setConfirmOpen(false);
     setResult({ transaction: res.data!.transaction, providerResponse: res.data!.providerResponse });
+    // Refresh server components (layout shell / topbar) so every balance on
+    // screen debits instantly instead of waiting for a manual refresh.
+    router.refresh();
   }
 
   return (
@@ -175,20 +181,22 @@ export default function DataPage() {
       </Card>
 
       {result && (
-        <Card className="gap-0">
-          <CardContent className="py-6">
-            <TransactionResult
-              transaction={result.transaction}
-              providerResponse={result.providerResponse}
-              onDone={() => {
-                setResult(null);
-                setPhone("");
-                setSelectedPlan(null);
-              }}
-            />
-          </CardContent>
-        </Card>
+        <TransactionResultDialog
+          open={!!result}
+          onOpenChange={(o) => {
+            if (!o) setResult(null);
+          }}
+          transaction={result.transaction}
+          providerResponse={result.providerResponse}
+          onDone={() => {
+            setResult(null);
+            setPhone("");
+            setSelectedPlan(null);
+          }}
+        />
       )}
+
+      <TransactionErrorDialog open={!!errorMsg} onOpenChange={(o) => !o && setErrorMsg(null)} message={errorMsg ?? ""} />
 
       {confirmOpen && (
         <ConfirmPurchaseDialog

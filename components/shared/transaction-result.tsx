@@ -76,6 +76,70 @@ export function ConfirmPurchaseDialog({
   );
 }
 
+export function TransactionResultDialog({
+  open,
+  onOpenChange,
+  transaction,
+  providerResponse,
+  pins,
+  serials,
+  onDone,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  transaction: VtuTransaction;
+  providerResponse?: { message?: string } & Record<string, unknown>;
+  pins?: string[];
+  serials?: string[];
+  onDone?: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <TransactionResult
+          transaction={transaction}
+          providerResponse={providerResponse}
+          pins={pins}
+          serials={serials}
+          onDone={() => {
+            onOpenChange(false);
+            onDone?.();
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function TransactionErrorDialog({
+  open,
+  onOpenChange,
+  message,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  message: string;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <div className="flex flex-col items-center gap-4 py-4 text-center">
+          <div className="flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <XCircle className="size-9" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Transaction failed</h3>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>
+          </div>
+          <Button className="w-full max-w-sm" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function TransactionResult({
   transaction,
   providerResponse,
